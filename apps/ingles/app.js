@@ -113,14 +113,13 @@ function spinFrames(target) {
   if (total < 2) return [target];
   const frames = [];
   let cursor = Math.floor(Math.random() * total);
-  const fast = Math.min(total, 10);
-  for (let step = 0; step < fast; step += 1) {
+  for (let step = 0; step < 2; step += 1) {
     cursor = (cursor + 1 + Math.floor(Math.random() * Math.max(1, total - 2))) % total;
     if (cursor === target) cursor = (cursor + 1) % total;
     frames.push(cursor);
   }
-  let step = (target - 4 + total) % total;
-  for (let hop = 0; hop < 5; hop += 1) {
+  let step = (target - 3 + total) % total;
+  for (let hop = 0; hop < 3; hop += 1) {
     step = (step + 1) % total;
     frames.push(step);
   }
@@ -133,7 +132,7 @@ function spinDelays(count) {
   const delays = [];
   for (let step = 0; step < count; step += 1) {
     const progress = step / (count - 1);
-    delays.push(36 + progress * progress * 190);
+    delays.push(520 + progress * progress * 260);
   }
   return delays;
 }
@@ -144,11 +143,10 @@ function wait(ms) {
   });
 }
 
-function showFrame(frame, fast) {
+function showFrame(frame) {
   emptyEl.hidden = true;
   cardEl.hidden = false;
   cardEl.src = cards[frame].image;
-  cardEl.classList.toggle("is-fast", fast);
   cardEl.classList.remove("is-tick");
   void cardEl.offsetWidth;
   cardEl.classList.add("is-tick");
@@ -162,8 +160,7 @@ async function spinTo(target) {
   const frames = reduceMotion ? [target] : spinFrames(target);
   const delays = spinDelays(frames.length);
   for (let step = 0; step < frames.length; step += 1) {
-    const fast = delays[step] < 90;
-    showFrame(frames[step], fast);
+    showFrame(frames[step]);
     if (!reduceMotion) playTick(step);
     await wait(delays[step]);
   }
@@ -171,7 +168,7 @@ async function spinTo(target) {
   saveIndex(index);
   spinning = false;
   showCard();
-  cardEl.classList.remove("is-fast", "is-tick");
+  cardEl.classList.remove("is-tick");
   cardEl.classList.add("is-chosen");
   if (!reduceMotion) playLand();
 }
@@ -180,7 +177,8 @@ function showCard() {
   const card = cards[index];
   emptyEl.hidden = true;
   cardEl.hidden = false;
-  cardEl.src = card.image;
+  const nextSrc = new URL(card.image, document.baseURI).href;
+  if (cardEl.src !== nextSrc) cardEl.src = nextSrc;
   playButton.disabled = false;
   nextButton.disabled = false;
   warmer.src = audioSrc(card.word);

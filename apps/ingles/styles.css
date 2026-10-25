@@ -61,27 +61,14 @@ body {
   -webkit-user-drag: none;
 }
 
-.stage img.is-tick {
-  animation: card-tick 150ms ease-out;
-}
-
-.stage img.is-fast {
-  filter: blur(1.5px);
-}
-
+.stage img.is-tick,
 .stage img.is-chosen {
-  animation: card-land 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  animation: card-settle 420ms ease-out;
 }
 
-@keyframes card-tick {
-  from { transform: scale(0.9); }
+@keyframes card-settle {
+  from { transform: scale(0.98); }
   to { transform: scale(1); }
-}
-
-@keyframes card-land {
-  0% { transform: scale(0.86); }
-  60% { transform: scale(1.035); }
-  100% { transform: scale(1); }
 }
 
 .empty {

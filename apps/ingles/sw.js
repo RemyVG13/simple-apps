@@ -1,5 +1,5 @@
-const SHELL_CACHE = "ingles-shell-v3";
-const MEDIA_CACHE = "ingles-media-v3";
+const SHELL_CACHE = "ingles-shell-v4";
+const MEDIA_CACHE = "ingles-media-v4";
 
 const SHELL = [
   "./",
