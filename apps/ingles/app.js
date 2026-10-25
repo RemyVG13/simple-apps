@@ -8,7 +8,6 @@ const audio = new Audio();
 const warmer = new Audio();
 
 const NOTES = [523.25, 587.33, 659.25, 783.99, 880];
-const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 let cards = [];
 let index = -1;
@@ -70,6 +69,22 @@ function toneContext() {
   return toneCtx;
 }
 
+function unlockTone() {
+  const ctx = toneContext();
+  if (!ctx) return null;
+  if (ctx.state === "suspended") ctx.resume();
+  try {
+    const buffer = ctx.createBuffer(1, 1, 22050);
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(ctx.destination);
+    source.start(0);
+  } catch (error) {
+    /* El desbloqueo es un intento; el primer tono sigue en el mismo toque. */
+  }
+  return ctx;
+}
+
 function blip(frequency, when, duration, volume) {
   const ctx = toneContext();
   if (!ctx) return;
@@ -82,8 +97,12 @@ function blip(frequency, when, duration, volume) {
   gain.gain.exponentialRampToValueAtTime(0.0001, when + duration);
   osc.connect(gain);
   gain.connect(ctx.destination);
-  osc.start(when);
-  osc.stop(when + duration);
+  try {
+    osc.start(when);
+    osc.stop(when + duration);
+  } catch (error) {
+    /* Sin un toque previo el celular puede bloquear el sonido. */
+  }
 }
 
 function playTick(step) {
@@ -152,16 +171,16 @@ function showFrame(frame) {
   cardEl.classList.add("is-tick");
 }
 
-async function spinTo(target) {
+async function spinTo(target, skipFirstTick) {
   spinning = true;
   playButton.disabled = true;
   nextButton.disabled = true;
   cardEl.classList.remove("is-chosen");
-  const frames = reduceMotion ? [target] : spinFrames(target);
+  const frames = spinFrames(target);
   const delays = spinDelays(frames.length);
   for (let step = 0; step < frames.length; step += 1) {
     showFrame(frames[step]);
-    if (!reduceMotion) playTick(step);
+    if (!(skipFirstTick && step === 0)) playTick(step);
     await wait(delays[step]);
   }
   index = target;
@@ -170,7 +189,7 @@ async function spinTo(target) {
   showCard();
   cardEl.classList.remove("is-tick");
   cardEl.classList.add("is-chosen");
-  if (!reduceMotion) playLand();
+  playLand();
 }
 
 function showCard() {
@@ -193,16 +212,15 @@ function playCurrent() {
   audio.play().catch(() => {});
 }
 
-async function showNext() {
+function showNext() {
   if (spinning || cards.length === 0) return;
   spinning = true;
   playButton.disabled = true;
   nextButton.disabled = true;
   audio.pause();
-  const target = pickTarget(index);
-  const ctx = toneContext();
-  if (ctx && ctx.state === "suspended") await ctx.resume();
-  await spinTo(target);
+  unlockTone();
+  playTick(0);
+  spinTo(pickTarget(index), true);
 }
 
 playButton.addEventListener("click", playCurrent);

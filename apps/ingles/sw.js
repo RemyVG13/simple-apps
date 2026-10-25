@@ -1,16 +1,4 @@
-const SHELL_CACHE = "ingles-shell-v5";
-const MEDIA_CACHE = "ingles-media-v5";
-
-const SHELL = [
-  "./",
-  "./index.html",
-  "./styles.css?v=5",
-  "./app.js?v=5",
-  "./manifest.webmanifest",
-  "./icons/icon-192.png",
-  "./icons/icon-512.png",
-  "./data/cards.json",
-];
+const MEDIA_CACHE = "ingles-media-v6";
 
 function slug(word) {
   return String(word)
@@ -56,49 +44,19 @@ async function cacheMediaFromCards(cache) {
   }
 }
 
-async function networkFirst(request) {
-  const cache = await caches.open(SHELL_CACHE);
-  try {
-    const response = await fetch(request, { cache: "reload" });
-    if (response && response.ok) cache.put(request, response.clone()).catch(() => {});
-    return response;
-  } catch (error) {
-    const cached = await cache.match(request);
-    if (cached) return cached;
-    if (request.mode === "navigate") {
-      const home = await cache.match("./index.html");
-      if (home) return home;
-    }
-    return new Response("Sin conexión", {
-      status: 503,
-      headers: { "Content-Type": "text/plain; charset=utf-8" },
-    });
-  }
-}
-
 async function cacheFirst(request) {
   const cache = await caches.open(MEDIA_CACHE);
   const cached = await cache.match(request);
   if (cached) return cached;
-  const response = await fetch(request.url);
-  if (response && response.ok && response.status !== 206) {
-    cache.put(request.url, response.clone());
+  try {
+    const response = await fetch(request);
+    if (response && response.ok && response.status !== 206) {
+      cache.put(request, response.clone()).catch(() => {});
+    }
+    return response;
+  } catch (error) {
+    return new Response("", { status: 504 });
   }
-  return response;
-}
-
-async function cacheUrls(cache, urls) {
-  await Promise.all(
-    urls.map(async (url) => {
-      try {
-        const response = await fetch(url, { cache: "no-store" });
-        if (!response.ok || response.redirected) return;
-        await cache.put(url, response);
-      } catch (error) {
-        /* Un archivo que todavía no existe no impide instalar la app. */
-      }
-    })
-  );
 }
 
 self.addEventListener("message", (event) => {
@@ -108,8 +66,6 @@ self.addEventListener("message", (event) => {
 self.addEventListener("install", (event) => {
   event.waitUntil(
     (async () => {
-      const shell = await caches.open(SHELL_CACHE);
-      await cacheUrls(shell, SHELL);
       const media = await caches.open(MEDIA_CACHE);
       await cacheMediaFromCards(media);
       await self.skipWaiting();
@@ -121,19 +77,8 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     (async () => {
       const keys = await caches.keys();
-      await Promise.all(
-        keys
-          .filter((key) => key !== SHELL_CACHE && key !== MEDIA_CACHE)
-          .map((key) => caches.delete(key))
-      );
+      await Promise.all(keys.filter((key) => key !== MEDIA_CACHE).map((key) => caches.delete(key)));
       await self.clients.claim();
-      const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
-      await Promise.all(
-        windows.map((client) => {
-          if (!client.url || typeof client.navigate !== "function") return Promise.resolve();
-          return client.navigate(client.url).catch(() => {});
-        })
-      );
     })()
   );
 });
@@ -143,10 +88,6 @@ self.addEventListener("fetch", (event) => {
   if (request.method !== "GET") return;
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
-  if (url.pathname.endsWith("/sw.js")) return;
-  if (isMedia(url)) {
-    event.respondWith(cacheFirst(request));
-    return;
-  }
-  event.respondWith(networkFirst(request));
+  if (!isMedia(url)) return;
+  event.respondWith(cacheFirst(request));
 });
