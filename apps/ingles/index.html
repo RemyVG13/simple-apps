@@ -13,7 +13,7 @@
   <link rel="icon" href="icons/icon-192.png">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=5">
 </head>
 <body>
   <main class="stage">
@@ -34,6 +34,42 @@
       </svg>
     </button>
   </div>
-  <script src="app.js"></script>
+  <script>
+    (function () {
+      if (!("serviceWorker" in navigator)) return;
+      var hadController = !!navigator.serviceWorker.controller;
+      var reloading = false;
+      navigator.serviceWorker.addEventListener("controllerchange", function () {
+        if (!hadController) {
+          hadController = true;
+          return;
+        }
+        if (reloading) return;
+        reloading = true;
+        location.reload();
+      });
+      function watch(worker) {
+        if (!worker) return;
+        worker.addEventListener("statechange", function () {
+          if (worker.state === "installed" && navigator.serviceWorker.controller) {
+            worker.postMessage("skip-waiting");
+          }
+        });
+      }
+      navigator.serviceWorker.register("./sw.js", { updateViaCache: "none" }).then(function (reg) {
+        watch(reg.installing);
+        if (reg.waiting && navigator.serviceWorker.controller) reg.waiting.postMessage("skip-waiting");
+        reg.addEventListener("updatefound", function () { watch(reg.installing); });
+        reg.update();
+      }).catch(function () {});
+      document.addEventListener("visibilitychange", function () {
+        if (document.visibilityState !== "visible") return;
+        navigator.serviceWorker.getRegistration().then(function (reg) {
+          if (reg) reg.update();
+        });
+      });
+    })();
+  </script>
+  <script src="app.js?v=5"></script>
 </body>
 </html>

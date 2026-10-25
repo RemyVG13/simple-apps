@@ -1,11 +1,11 @@
-const SHELL_CACHE = "ingles-shell-v4";
-const MEDIA_CACHE = "ingles-media-v4";
+const SHELL_CACHE = "ingles-shell-v5";
+const MEDIA_CACHE = "ingles-media-v5";
 
 const SHELL = [
   "./",
   "./index.html",
-  "./styles.css",
-  "./app.js",
+  "./styles.css?v=5",
+  "./app.js?v=5",
   "./manifest.webmanifest",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
@@ -59,8 +59,8 @@ async function cacheMediaFromCards(cache) {
 async function networkFirst(request) {
   const cache = await caches.open(SHELL_CACHE);
   try {
-    const response = await fetch(request);
-    if (response && response.ok) cache.put(request, response.clone());
+    const response = await fetch(request, { cache: "reload" });
+    if (response && response.ok) cache.put(request, response.clone()).catch(() => {});
     return response;
   } catch (error) {
     const cached = await cache.match(request);
@@ -101,6 +101,10 @@ async function cacheUrls(cache, urls) {
   );
 }
 
+self.addEventListener("message", (event) => {
+  if (event.data === "skip-waiting") self.skipWaiting();
+});
+
 self.addEventListener("install", (event) => {
   event.waitUntil(
     (async () => {
@@ -123,6 +127,13 @@ self.addEventListener("activate", (event) => {
           .map((key) => caches.delete(key))
       );
       await self.clients.claim();
+      const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+      await Promise.all(
+        windows.map((client) => {
+          if (!client.url || typeof client.navigate !== "function") return Promise.resolve();
+          return client.navigate(client.url).catch(() => {});
+        })
+      );
     })()
   );
 });
@@ -132,6 +143,7 @@ self.addEventListener("fetch", (event) => {
   if (request.method !== "GET") return;
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
+  if (url.pathname.endsWith("/sw.js")) return;
   if (isMedia(url)) {
     event.respondWith(cacheFirst(request));
     return;

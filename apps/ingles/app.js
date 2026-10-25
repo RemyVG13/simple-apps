@@ -238,10 +238,4 @@ async function init() {
   await spinTo(pickTarget(saved));
 }
 
-if ("serviceWorker" in navigator && location.protocol !== "file:") {
-  navigator.serviceWorker.register("./sw.js").catch((error) => {
-    console.error(error);
-  });
-}
-
 init();
