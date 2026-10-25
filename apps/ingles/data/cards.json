@@ -1,0 +1,82 @@
+[
+  {
+    "word": "apple",
+    "image": "images/apple.jpg"
+  },
+  {
+    "word": "ball",
+    "image": "images/ball.jpg"
+  },
+  {
+    "word": "banana",
+    "image": "images/banana.jpg"
+  },
+  {
+    "word": "bird",
+    "image": "images/bird.jpg"
+  },
+  {
+    "word": "boy",
+    "image": "images/boy.jpg"
+  },
+  {
+    "word": "car",
+    "image": "images/car.jpg"
+  },
+  {
+    "word": "carrot",
+    "image": "images/carrot.jpg"
+  },
+  {
+    "word": "cat",
+    "image": "images/cat.jpg"
+  },
+  {
+    "word": "dad",
+    "image": "images/dad.jpg"
+  },
+  {
+    "word": "dog",
+    "image": "images/dog.jpg"
+  },
+  {
+    "word": "girl",
+    "image": "images/girl.jpg"
+  },
+  {
+    "word": "happy",
+    "image": "images/happy.jpg"
+  },
+  {
+    "word": "head",
+    "image": "images/head.jpg"
+  },
+  {
+    "word": "kite",
+    "image": "images/kite.jpg"
+  },
+  {
+    "word": "legs",
+    "image": "images/legs.jpg"
+  },
+  {
+    "word": "mum",
+    "image": "images/mum.jpg"
+  },
+  {
+    "word": "pepper",
+    "image": "images/pepper.jpg"
+  },
+  {
+    "word": "plane",
+    "image": "images/plane.jpg"
+  },
+  {
+    "word": "potato",
+    "image": "images/potato.jpg"
+  },
+  {
+    "word": "sad",
+    "image": "images/sad.jpg"
+  }
+]

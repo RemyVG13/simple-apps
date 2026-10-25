@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f4f1ea">
+  <meta name="color-scheme" content="light">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Inglés">
+  <title>Inglés</title>
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="stage">
+    <p id="empty" class="empty" hidden>Todavía no hay tarjetas.</p>
+    <img id="card" alt="" draggable="false" hidden>
+  </main>
+  <div class="controls">
+    <button id="play" type="button" aria-label="Reproducir" disabled>
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path fill="currentColor" d="M3 9.5v5h3.5L12 19V5L6.5 9.5H3z"/>
+        <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M16 9a4 4 0 0 1 0 6"/>
+        <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M18.5 7a7 7 0 0 1 0 10"/>
+      </svg>
+    </button>
+    <button id="next" type="button" aria-label="Siguiente" disabled>
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M4 12h14M13 6l6 6-6 6"/>
+      </svg>
+    </button>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
