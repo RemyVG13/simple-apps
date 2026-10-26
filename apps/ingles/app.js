@@ -1,5 +1,3 @@
-const STORAGE_KEY = "ingles-card-index";
-
 const emptyEl = document.querySelector("#empty");
 const cardEl = document.querySelector("#card");
 const playButton = document.querySelector("#play");
@@ -10,7 +8,10 @@ const warmer = new Audio();
 const NOTES = [523.25, 587.33, 659.25, 783.99, 880];
 
 let cards = [];
+let deck = [];
+let place = 0;
 let index = -1;
+let heard = false;
 let spinning = false;
 let toneCtx = null;
 
@@ -27,24 +28,6 @@ function slug(word) {
 
 function audioSrc(word) {
   return new URL(`audio/${slug(word)}.mp3`, document.baseURI).href;
-}
-
-function loadIndex(length) {
-  try {
-    const saved = Number(localStorage.getItem(STORAGE_KEY));
-    if (Number.isInteger(saved) && saved >= 0 && saved < length) return saved;
-  } catch (error) {
-    return 0;
-  }
-  return 0;
-}
-
-function saveIndex(value) {
-  try {
-    localStorage.setItem(STORAGE_KEY, String(value));
-  } catch (error) {
-    /* El modo privado puede bloquear el almacenamiento. */
-  }
 }
 
 function showEmpty() {
@@ -120,10 +103,30 @@ function playLand() {
   });
 }
 
-function pickTarget(avoid) {
-  if (cards.length < 2) return 0;
-  let target = avoid;
-  while (target === avoid) target = Math.floor(Math.random() * cards.length);
+function shuffledDeck(avoid) {
+  const order = cards.map((_, cardIndex) => cardIndex);
+  for (let i = order.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const current = order[i];
+    order[i] = order[j];
+    order[j] = current;
+  }
+  if (order.length > 1 && order[0] === avoid) {
+    const j = 1 + Math.floor(Math.random() * (order.length - 1));
+    const current = order[0];
+    order[0] = order[j];
+    order[j] = current;
+  }
+  return order;
+}
+
+function takeNext() {
+  if (place >= deck.length) {
+    deck = shuffledDeck(index);
+    place = 0;
+  }
+  const target = deck[place];
+  place += 1;
   return target;
 }
 
@@ -184,7 +187,6 @@ async function spinTo(target, skipFirstTick) {
     await wait(delays[step]);
   }
   index = target;
-  saveIndex(index);
   spinning = false;
   showCard();
   cardEl.classList.remove("is-tick");
@@ -198,8 +200,9 @@ function showCard() {
   cardEl.hidden = false;
   const nextSrc = new URL(card.image, document.baseURI).href;
   if (cardEl.src !== nextSrc) cardEl.src = nextSrc;
+  heard = false;
   playButton.disabled = false;
-  nextButton.disabled = false;
+  nextButton.disabled = true;
   warmer.src = audioSrc(card.word);
 }
 
@@ -210,17 +213,19 @@ function playCurrent() {
   if (audio.src !== src) audio.src = src;
   if (audio.readyState >= 1) audio.currentTime = 0;
   audio.play().catch(() => {});
+  heard = true;
+  nextButton.disabled = false;
 }
 
 function showNext() {
-  if (spinning || cards.length === 0) return;
+  if (spinning || !heard || cards.length === 0) return;
   spinning = true;
   playButton.disabled = true;
   nextButton.disabled = true;
   audio.pause();
   unlockTone();
   playTick(0);
-  spinTo(pickTarget(index), true);
+  spinTo(takeNext(), true);
 }
 
 playButton.addEventListener("click", playCurrent);
@@ -252,8 +257,7 @@ async function init() {
   }
 
   preloadImages();
-  const saved = loadIndex(cards.length);
-  await spinTo(pickTarget(saved));
+  await spinTo(takeNext());
 }
 
 init();
